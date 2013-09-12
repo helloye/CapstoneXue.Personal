@@ -105,7 +105,6 @@ public class LearnActivity extends Activity implements OnGestureListener {
 			Animation a1;
         	a1 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_to_right_slide);
         	prompt.startAnimation(a1);
-        	status.startAnimation(a1);
 			
 			// Got it wrong
 			//advance.setText("show");
