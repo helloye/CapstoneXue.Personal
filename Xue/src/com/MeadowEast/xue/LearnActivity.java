@@ -102,6 +102,12 @@ public class LearnActivity extends Activity implements OnGestureListener {
 			itemsShown++;
 		} else if (itemsShown == 3){
 			//If items are 3, advance to next card. Slide animation below.
+<<<<<<< HEAD
+=======
+			Animation a1;
+        	a1 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_to_right_slide);
+        	prompt.startAnimation(a1);
+>>>>>>> 83e3465d869399d613fbe5b7f37d301ef3cb9f2d
 			
 			// Got it wrong
 			//advance.setText("show");
