@@ -3,10 +3,8 @@ package com.MeadowEast.xue;
 import java.io.IOException;
 
 import android.app.Activity;
-import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -18,27 +16,24 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewManager;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class LearnActivity extends Activity implements OnGestureListener {
+public class LearnActivity extends Activity implements OnClickListener, OnGestureListener {
 	static final String TAG = "LearnActivity";
-	static final int ECDECKSIZE = 40;
+	static final int ECDECKSIZE = 4;
 	static final int CEDECKSIZE = 60;
-	
-	private static final int SWIPE_MIN_DISTANCE = 120;		 //Min distance to register as swipe.
-	private static final int SWIPE_THRESHOLD_VELOCITY = 150; //Sensitivity
 	
 	LearningProject lp;
 	int itemsShown;
 	TextView prompt, answer, other, status;
 	//Button advance, okay;
 	
+	private static final int SWIPE_MIN_DISTANCE = 120;
+	private static final int SWIPE_THRESHOLD_VELOCITY = 150;
 	private GestureDetector gestureScanner;
-
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,21 +65,75 @@ public class LearnActivity extends Activity implements OnGestureListener {
     	doAdvance();
     }
     
+    /////////////////////////
+    // SWIPE GESTURES START//
+    /////////////////////////
     @Override
-	public boolean onTouchEvent(MotionEvent e){
-		return gestureScanner.onTouchEvent(e);
-	}
+    public boolean onTouchEvent(MotionEvent e){
+    	return gestureScanner.onTouchEvent(e);
+    }
 
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+            float velocityY) {
+        try {
+        	//right to left. ->next Card
+        	if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+ 
+        			//Toast.makeText(getApplicationContext(), "Next Card!!", Toast.LENGTH_SHORT).show();
+        		if(itemsShown>1){
+        			itemsShown=3;
+        			doAdvance();
+        		}
+            }
+        	//left to right -> undo
+        	else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY){
+        			Toast.makeText(getApplicationContext(), "Nothing to undo!", Toast.LENGTH_SHORT).show();
+        			doUndo();
+        	}
+            // bottom to top ->get rid of card only if itemsShown is at least 1
+            else if(e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY){
+            		//Toast.makeText(getApplicationContext(), "Card Removed!!", Toast.LENGTH_SHORT).show();
+            		doOkay();
+            }
+        	//top to bottom ->show next
+            else if(e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY){
+    				//Toast.makeText(getApplicationContext(), "Show next!!", Toast.LENGTH_SHORT).show();
+            	if(itemsShown<3)
+    				doAdvance();
+            }
+            
+        } catch (Exception e) {
+
+        }
+        return false;
+     }
+    
+    ////////////////////////
+    // SWIPE GESTURES END //
+    ////////////////////////
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
     }
     
+
     
-    //Private variable "advance" not defined in gesture. Delete it from declaration up top. (Commented it out at the moment)
 	private void doAdvance(){
-		if (itemsShown == 0){
+		if (status.getText().equals("DONE!"))
+			try {
+				lp.log(lp.queueStatus());
+				lp.writeStatus();
+				finish();
+				return;
+				//System.exit(0);
+			} catch (IOException e) {
+				Log.d(TAG, "couldn't write Status");
+				return;
+			}
+		switch (itemsShown){
+		case 0:
 			if (lp.next()){
 				prompt.setText(lp.prompt());
 				status.setText(lp.deckStatus());
@@ -93,22 +142,17 @@ public class LearnActivity extends Activity implements OnGestureListener {
 				Log.d(TAG, "Error: Deck starts empty");
 				throw new IllegalStateException("Error: Deck starts empty.");
 			}
-		} else if (itemsShown == 1){
+			break;
+		case 1:
 			answer.setText(lp.answer());
 			itemsShown++;
-		} else if (itemsShown == 2){
+			break;
+		case 2:
 			other.setText(lp.other());
 			//advance.setText("next");
 			itemsShown++;
-		} else if (itemsShown == 3){
-			//If items are 3, advance to next card. Slide animation below.
-<<<<<<< HEAD
-=======
-			Animation a1;
-        	a1 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_to_right_slide);
-        	prompt.startAnimation(a1);
->>>>>>> 83e3465d869399d613fbe5b7f37d301ef3cb9f2d
-			
+			break;
+		case 3:
 			// Got it wrong
 			//advance.setText("show");
 			lp.wrong();
@@ -117,15 +161,19 @@ public class LearnActivity extends Activity implements OnGestureListener {
 			prompt.setText(lp.prompt());
 			itemsShown = 1;
 			status.setText(lp.deckStatus());
+			break;
+		default:
+			//Should not get here.
+			Log.d(TAG, "Error: Default switch case reached!");
+			break;
 		}
 	}
-	//Do undo here
+	
+	/////////////////
+	//UNDO FUNCTION//
+	/////////////////
 	private void doUndo(){
-		lp.undo();
-		clearContent();
-		prompt.setText(lp.prompt());
-		itemsShown = 1;
-		status.setText(lp.deckStatus());
+
 	}
 	
 	private void clearContent(){
@@ -135,8 +183,7 @@ public class LearnActivity extends Activity implements OnGestureListener {
 	}
 	
 	private void doOkay(){
-		//if (okay.getText().equals("done"))
-		if(true)
+		if (status.getText().equals("DONE!"))
 			try {
 				lp.log(lp.queueStatus());
 				lp.writeStatus();
@@ -159,30 +206,12 @@ public class LearnActivity extends Activity implements OnGestureListener {
 			status.setText(lp.deckStatus());
 		} else {
 			//((ViewManager) advance.getParent()).removeView(advance);
-			status.setText("");
+			status.setText("DONE!");
 			//okay.setText("done");
 			clearContent();
 		}
 	}
     
-	//Instead of onClick, use swipe (fling) gestures to call doAdvance();
-	
-/*    public void onClick(View v){
-    	switch (v.getId()){
-    	case R.id.advanceButton:
-    		doAdvance();
-			break;
-    	case R.id.okayButton:
-    		doOkay();
-			break;
-//    	case R.id.promptTextView:
-//    	case R.id.answerTextView:
-//    	case R.id.otherTextView:
-//    		Toast.makeText(this, "Item index: "+lp.currentIndex(), Toast.LENGTH_LONG).show();
-//    		break;
-    	}
-    }
-    */
 
     public boolean onLongClick(View v){
     	switch (v.getId()){
@@ -218,86 +247,32 @@ public class LearnActivity extends Activity implements OnGestureListener {
 
 	public boolean onDown(MotionEvent e) {
 		// TODO Auto-generated method stub
-		System.out.println("HELLO BLUE ONDOWN!!");
 		return false;
 	}
 
-		//Swipe OK. Effects ok.
-	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
-            float velocityY) {
-        try {
-
-        	//right to left. ->next Card
-        	if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-        		if(itemsShown>1){
-        			itemsShown=3;
-        			Animation a1;
-                	a1 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.right_to_left_slide);
-                	prompt.startAnimation(a1);
-                	status.startAnimation(a1);
-                	doAdvance();
-            		Toast.makeText(getApplicationContext(), "Next Card!!", Toast.LENGTH_SHORT).show();
-        		}
-            	
-            }
-        	//left to right -> undo
-        	else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY){
-        		if(lp.seenTimes()>1){
-        			doUndo();
-        			Toast.makeText(getApplicationContext(), "Undo!!", Toast.LENGTH_SHORT).show();
-        		}
-        		else
-        			Toast.makeText(getApplicationContext(), "No more previous cards!", Toast.LENGTH_SHORT).show();
-        	}
-            // bottom to top ->get rid of card only if itemsShown is at least 1
-            else if(e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY){
-            		itemsShown=3;
-            		Animation a1;
-            		a1 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.bottom_to_top_slide);
-            		prompt.startAnimation(a1);
-            		status.startAnimation(a1);
-            		
-            		Toast.makeText(getApplicationContext(), "Card Removed!!", Toast.LENGTH_SHORT).show();
-            		//Do remove here? Instead of doAdvance()
-            		doAdvance();
-            }
-        	//top to bottom ->show next
-            else if(e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY){
-            	if(itemsShown<3)
-            		doAdvance();
-            }
-            
-        } catch (Exception e) {
-
-        }
-        return false;
-     }
-
-
 	public void onLongPress(MotionEvent e) {
 		// TODO Auto-generated method stub
-		System.out.println("HELLO BLUE LONG PRESS!!");
-
+		
 	}
 
 	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
 			float distanceY) {
 		// TODO Auto-generated method stub
-		System.out.println("HELLO BLUE SCROLL!!");
-
 		return false;
 	}
 
 	public void onShowPress(MotionEvent e) {
 		// TODO Auto-generated method stub
-
 		
 	}
 
 	public boolean onSingleTapUp(MotionEvent e) {
 		// TODO Auto-generated method stub
-		
 		return false;
 	}
 
+	public void onClick(View arg0) {
+		// TODO Auto-generated method stub
+		
+	}
 }
