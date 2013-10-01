@@ -16,8 +16,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewManager;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -78,7 +76,10 @@ public class LearnActivity extends Activity implements OnClickListener, OnGestur
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
             float velocityY) {
         try {
+<<<<<<< HEAD
     		Animation swipeAnimation;
+=======
+>>>>>>> 6bcb0be60af9ee809afc04df193c535e17f9a072
         	//right to left. ->next Card
         	if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
  
@@ -86,9 +87,12 @@ public class LearnActivity extends Activity implements OnClickListener, OnGestur
         		if(itemsShown>1){
         			itemsShown=3;
         			doAdvance();
+<<<<<<< HEAD
         			swipeAnimation = AnimationUtils.loadAnimation(this, R.anim.right_to_left_slide);
         			prompt.startAnimation(swipeAnimation);
         			status.startAnimation(swipeAnimation);
+=======
+>>>>>>> 6bcb0be60af9ee809afc04df193c535e17f9a072
         		}
             }
         	//left to right -> undo
@@ -98,9 +102,14 @@ public class LearnActivity extends Activity implements OnClickListener, OnGestur
         	}
             // bottom to top ->get rid of card only if itemsShown is at least 1
             else if(e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY){
+<<<<<<< HEAD
             		//Toast.makeText(getApplicationContext(), "Card Removed!!", Toast.LENGTH_SHORT).show()
             		doOkay();
             		
+=======
+            		//Toast.makeText(getApplicationContext(), "Card Removed!!", Toast.LENGTH_SHORT).show();
+            		doOkay();
+>>>>>>> 6bcb0be60af9ee809afc04df193c535e17f9a072
             }
         	//top to bottom ->show next
             else if(e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY){
