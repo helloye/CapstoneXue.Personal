@@ -9,15 +9,16 @@ package com.MeadowEast.xue;
 
 public final class R {
     public static final class anim {
-        public static final int left_to_right_slide=0x7f040000;
-        public static final int right_to_left_slide=0x7f040001;
+        public static final int bottom_to_top_slide=0x7f040000;
+        public static final int left_to_righ_slide=0x7f040001;
+        public static final int right_to_left_slide=0x7f040002;
     }
     public static final class attr {
     }
     public static final class drawable {
         public static final int ic_action_search=0x7f020000;
         public static final int ic_launcher=0x7f020001;
-        public static final int twotonebg=0x7f020002;
+        public static final int xue_bg=0x7f020002;
     }
     public static final class id {
         public static final int LinearLayout1=0x7f080000;
