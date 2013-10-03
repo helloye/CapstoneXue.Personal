@@ -8,11 +8,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.GestureDetector.OnGestureListener;
 import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
@@ -23,11 +20,16 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+<<<<<<< HEAD
 public class LearnActivity extends Activity implements OnGestureListener {
+=======
+public class LearnActivity extends Activity implements OnClickListener, OnLongClickListener {
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
 	static final String TAG = "LearnActivity";
-	static final int ECDECKSIZE = 4;
+	static final int ECDECKSIZE = 40;
 	static final int CEDECKSIZE = 60;
 
+	
 	
 	LearningProject lp;
 	int itemsShown;
@@ -35,9 +37,12 @@ public class LearnActivity extends Activity implements OnGestureListener {
 	Button advance, okay;
 
 	private SoundManager _soundManager;
+<<<<<<< HEAD
 	private GestureDetector gestureScanner;
 	private static final int SWIPE_MIN_DISTANCE = 120;
 	private static final int SWIPE_THRESHOLD_VELOCITY = 150;
+=======
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,21 +52,26 @@ public class LearnActivity extends Activity implements OnGestureListener {
         
         Log.d(TAG, "Entering onCreate");
 
+<<<<<<< HEAD
         //Create sound manager and gesture detector below.
         _soundManager = SoundManager.getInstance();
         gestureScanner = new GestureDetector(this);
+=======
+        _soundManager = SoundManager.getInstance();
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
         
         itemsShown = 0;
         prompt  = (TextView) findViewById(R.id.promptTextView);
         status  = (TextView) findViewById(R.id.statusTextView);
         other   = (TextView) findViewById(R.id.otherTextView);
         answer  = (TextView) findViewById(R.id.answerTextView);
-        //advance  = (Button) findViewById(R.id.advanceButton);
-        //okay     = (Button) findViewById(R.id.okayButton);
+        advance  = (Button) findViewById(R.id.advanceButton);
+        okay     = (Button) findViewById(R.id.okayButton);
     	   
-    	//findViewById(R.id.advanceButton).setOnClickListener(this);
-    	//findViewById(R.id.okayButton).setOnClickListener(this);
+    	findViewById(R.id.advanceButton).setOnClickListener(this);
+    	findViewById(R.id.okayButton).setOnClickListener(this);
     	
+<<<<<<< HEAD
         //Setting long click instance for the status text view so user will be able to long click them and send email and get index
 
     	findViewById(R.id.statusTextView).setOnLongClickListener(new OnLongClickListener(){
@@ -72,6 +82,11 @@ public class LearnActivity extends Activity implements OnGestureListener {
 				return false;
 			}
     	});
+=======
+    	findViewById(R.id.promptTextView).setOnLongClickListener(this);
+    	findViewById(R.id.answerTextView).setOnLongClickListener(this);
+    	findViewById(R.id.otherTextView).setOnLongClickListener(this);
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
     	
     	if (MainActivity.mode.equals("ec"))
     		lp = new EnglishChineseProject(ECDECKSIZE);	
@@ -89,6 +104,7 @@ public class LearnActivity extends Activity implements OnGestureListener {
         return true;
     }
     
+<<<<<<< HEAD
     private void doAdvance(){
 		if (status.getText().equals("DONE!"))
 			try {
@@ -103,6 +119,10 @@ public class LearnActivity extends Activity implements OnGestureListener {
 			}
 		switch (itemsShown){
 		case 0:
+=======
+	private void doAdvance(){
+		if (itemsShown == 0){
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
 			if (lp.next()){
 				prompt.setText(lp.prompt());
 				status.setText(lp.deckStatus());
@@ -111,32 +131,25 @@ public class LearnActivity extends Activity implements OnGestureListener {
 				Log.d(TAG, "Error: Deck starts empty");
 				throw new IllegalStateException("Error: Deck starts empty.");
 			}
-			break;
-		case 1:
+		} else if (itemsShown == 1){
 			answer.setText(lp.answer());
 			itemsShown++;
-			break;
-		case 2:
+		} else if (itemsShown == 2){
 			other.setText(lp.other());
-			//advance.setText("next");
+			advance.setText("next");
 			itemsShown++;
-			break;
-		case 3:
+		} else if (itemsShown == 3){
 			// Got it wrong
-			//advance.setText("show");
+			advance.setText("show");
 			lp.wrong();
 			lp.next();
 			clearContent();
 			prompt.setText(lp.prompt());
 			itemsShown = 1;
 			status.setText(lp.deckStatus());
-			break;
-		default:
-			//Should not get here.
-			Log.d(TAG, "Error: Default switch case reached!");
-			break;
 		}
 	}
+<<<<<<< HEAD
     
     /////////////////
     //UNDO FUNCTION//
@@ -144,6 +157,9 @@ public class LearnActivity extends Activity implements OnGestureListener {
     private void doUndo(){
     	
     }
+=======
+	
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
 	
 	private void clearContent(){
 		prompt.setText("");
@@ -152,7 +168,7 @@ public class LearnActivity extends Activity implements OnGestureListener {
 	}
 	
 	private void doOkay(){
-		if (status.getText().equals("DONE!"))
+		if (okay.getText().equals("done"))
 			try {
 				lp.log(lp.queueStatus());
 				lp.writeStatus();
@@ -168,7 +184,7 @@ public class LearnActivity extends Activity implements OnGestureListener {
 		// Got it right
 		lp.right();
 		if (lp.next()){
-			//advance.setText("show");
+			advance.setText("show");
 			clearContent();
 			prompt.setText(lp.prompt());
 			itemsShown = 1;
@@ -178,15 +194,19 @@ public class LearnActivity extends Activity implements OnGestureListener {
     		prompt.startAnimation(swipeAnimation);
     		status.startAnimation(swipeAnimation);
 		} else {
-			//((ViewManager) advance.getParent()).removeView(advance);
-			status.setText("DONE!");
-			//okay.setText("done");
+			((ViewManager) advance.getParent()).removeView(advance);
+			status.setText("");
+			okay.setText("done");
 			clearContent();
 		}
 	}
+<<<<<<< HEAD
 /*
  * No need for clicks with swipe gestures.
    
+=======
+    
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
     public void onClick(View v){
     	switch (v.getId()){
     	case R.id.advanceButton:
@@ -215,7 +235,11 @@ public class LearnActivity extends Activity implements OnGestureListener {
     	}
     	return true;
     }
+<<<<<<< HEAD
 */
+=======
+    
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
     public void sendCardNoteEmail() {
     	
     	Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);  
@@ -234,7 +258,11 @@ public class LearnActivity extends Activity implements OnGestureListener {
         emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, strMsgBody );  
         startActivity(Intent.createChooser(emailIntent, "Send your email in:"));   
     }
+<<<<<<< HEAD
    
+=======
+    
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK){
@@ -255,6 +283,7 @@ public class LearnActivity extends Activity implements OnGestureListener {
         	return super.onKeyDown(keyCode, event);
         }
     }
+<<<<<<< HEAD
 
 	public boolean onDown(MotionEvent arg0) {
 		// TODO Auto-generated method stub
@@ -332,5 +361,7 @@ public class LearnActivity extends Activity implements OnGestureListener {
 		// TODO Auto-generated method stub
 		return false;
 	}
+=======
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
     
 }

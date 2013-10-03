@@ -5,8 +5,12 @@
     android:layout_height="fill_parent"
     android:gravity="center"
     android:orientation="vertical"
+<<<<<<< HEAD
     android:padding="30dp" 
     android:background="@drawable/xue_bg">
+=======
+    android:padding="30dp" >
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
 
     <Button
         android:id="@+id/ecButton"
@@ -47,4 +51,20 @@
         android:textSize="40sp" 
         android:textColor="#FFFFFF" />
         
+<<<<<<< HEAD
 </LinearLayout>
+=======
+    <Button
+        android:id="@+id/btnGetVocab"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="UpdateVocab"
+        android:text="@string/update_vocab" />
+        android:textSize="40sp" 
+        android:textColor="#FFFFFF" />
+    
+
+</LinearLayout>
+    
+        
+>>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
