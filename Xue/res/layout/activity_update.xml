@@ -2,28 +2,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-<<<<<<< HEAD
     android:orientation="vertical" 
     android:background="@drawable/xue_bg">
    
-=======
-    android:orientation="vertical" >
-    
-
-        
-    	
->>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
     <Button
         android:id="@+id/btnCancelUpdate"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:onClick="cancelUpdate"
-<<<<<<< HEAD
         android:text="@string/cancel_update" 
         android:textColor="#FFFFFF"/>
-=======
-        android:text="@string/cancel_update" />
->>>>>>> e9e8e4bf5bdde0b6270b13181de8106e117fad0d
 
          
 </LinearLayout>
