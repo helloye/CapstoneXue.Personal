@@ -11,11 +11,10 @@ import android.util.Log;
 
 abstract public class LearningProject {
 	
-	private String name;
-	private int n, seen;
+	private String _name;
+	private int _nDeckSize, _seen;
 	protected List<IndexSet> indexSets;
 	protected Map<Integer, Date> timestamps;
-	protected Stack<CardStatus> undoStack = new Stack<CardStatus>();
 	protected Deck deck;
 	protected CardStatus cardStatus = null;
 	protected Card card = null;	
@@ -23,13 +22,13 @@ abstract public class LearningProject {
 	private SoundManager _soundManager;
 	private static String medFileRightPath = "R.raw.";
 	private static String medFileWrongPath = "";
+	final static int DEFAULT_TARGET = 700;
 
-	
-	
-	public LearningProject(String name, int n) {
-		this.n = n;
-		this.name = name;
-		this.seen = 0;
+	public LearningProject( String name, int nDeckSize, int nTarget ) {
+		this._nDeckSize = nDeckSize;
+		this._name = name;
+		this._seen = 0;
+		//this._nTarget = nTarget;
 		Log.d(TAG, "Creating index sets");
 		indexSets = new ArrayList<IndexSet>();
 		for (int i=0; i<5; ++i){
@@ -39,14 +38,20 @@ abstract public class LearningProject {
 		Log.d(TAG, "Reading status");
 		readStatus();
 		Log.d(TAG, "Making deck");
-		deck = makeDeck(n, 700);
+		deck = makeDeck( _nDeckSize, nTarget );
 		
 		_soundManager = SoundManager.getInstance();
 		
 		Log.d(TAG, "Exiting LearningProject constructor");
 
-	}	
+	}
 	
+//	public int getTarget() {
+//	    return this._nTarget;
+//	}
+//	public void setTarget( int nNewtarget ) {
+//	     this._nTarget = nNewtarget;
+//	}
 
 	// n is the size of the deck
 	// target is used to limit the number at Levels 1 and 2, the ones
@@ -103,17 +108,10 @@ abstract public class LearningProject {
 		return d;
 	}
 	
- 	public boolean isUndoEmpty(){
- 		return undoStack.empty();
- 	}
- 	
 	public boolean next() {
-		if (deck.isEmpty()){ 
-			seen++;
-			return false;
-		}
+		if (deck.isEmpty()) return false;
 		cardStatus = deck.get();
-		seen++;
+		_seen++;
 		card = AllCards.getCard(cardStatus.getIndex());
 		return true;
 	}
@@ -131,10 +129,10 @@ abstract public class LearningProject {
 	abstract public void addNewItems(int n);
 	
 	public void right(){
-		undoStack.push(cardStatus);
 		cardStatus.right();
 		// put it in the appropriate index set
 		indexSets.get(cardStatus.getLevel()).add(cardStatus.getIndex());
+		
 		playRightSound();
 		
 	}
@@ -142,17 +140,16 @@ abstract public class LearningProject {
 	public void playRightSound()
 	{
 		if ( _soundManager.isInitialized() )
-			_soundManager.play( Sounds.SND_RIGHT.ordinal() );
+			_soundManager.playSoundFX( Sounds.SND_RIGHT );
 	}
 	public void playWrongSound()
 	{
 		if ( _soundManager.isInitialized() )
-			_soundManager.play( Sounds.SND_WRONG.ordinal() );
+			_soundManager.playSoundFX( Sounds.SND_WRONG);
 		
 	}
 	
 	public void wrong() {
-		undoStack.push(cardStatus);
 		cardStatus.wrong();
 		// return to the deck
 		deck.put(cardStatus);
@@ -160,26 +157,9 @@ abstract public class LearningProject {
 		playWrongSound();
 	}
 	
-	public void undo(){
-		if(cardStatus!=null) //If there is current card status, put it back on top of the deck.
-			deck.putFront(cardStatus);
-		
-		cardStatus = undoStack.pop(); //Get the previous card
-		if(deck.contains(cardStatus)){ //Means it's still in deck, means it was called wrong()
-			deck.removeDuplicate(cardStatus); //First remove the duplicate
-			seen--;
-			card = AllCards.getCard(cardStatus.getIndex());
-		}
-		else{						//Else if it's not in deck it was right. Remove level+1.getindex() from indexSets
-			seen--;
-			indexSets.get(cardStatus.getLevel()+1).remove(cardStatus.getIndex());
-			card = AllCards.getCard(cardStatus.getIndex());
-		}
-	}
-	
 	String deckStatus(){
 		String left = (deck.size()+1)+" left";
-		return seen > n ? left : seen + " of " + n + " seen, " + left; 
+		return _seen > _nDeckSize ? left : _seen + " of " + _nDeckSize + " seen, " + left; 
 	}
 	
 	String queueStatus(){
@@ -189,13 +169,12 @@ abstract public class LearningProject {
 //				n[2]+n[3]+n[4], n[0]+n[1]+n[2]+n[3]+n[4]);
 		return String.format("    %d   %d + %d = %d    %d + %d = %d    %d",
 				n[0], n[1], n[2], n[1]+n[2], n[3], n[4], n[3]+n[4], n[0]+n[1]+n[2]+n[3]+n[4]);
-		//Returns string #lvl0, #lvl1, #lvl2, #lvl1+2, #lvl3, #lvl4, #lvl3+4, #total in lvl1-4
 	}
 	
 	public void log(String s) throws IOException {
 		Log.d(TAG, "Entering log okay");
 		boolean append = true;
-		File logfilehandle = new File(MainActivity.filesDir, name + ".log.txt");
+		File logfilehandle = new File(MainActivity.filesDir, _name + ".log.txt");
 		Log.d(TAG, "logfilehandle is: " +logfilehandle);
 		FileWriter logfile = new FileWriter(logfilehandle, append);
 		PrintWriter out = new PrintWriter(logfile);
@@ -207,7 +186,7 @@ abstract public class LearningProject {
 	
 	public void writeStatus() throws IOException {
 		
-		File statusobjectfile = new File(MainActivity.filesDir, name + ".status.ser");
+		File statusobjectfile = new File(MainActivity.filesDir, _name + ".status.ser");
 		FileOutputStream statusobjectFOS = new FileOutputStream(statusobjectfile);
 		ObjectOutputStream statusobjectOOS = new ObjectOutputStream(statusobjectFOS);
 		
@@ -222,7 +201,7 @@ abstract public class LearningProject {
 		FileInputStream statusobjectFIS;
 		ObjectInputStream statusobjectOIS;
 		try {
-			File statusobjectfile = new File(MainActivity.filesDir, name + ".status.ser");
+			File statusobjectfile = new File(MainActivity.filesDir, _name + ".status.ser");
 			statusobjectFIS = new FileInputStream(statusobjectfile);
 			statusobjectOIS = new ObjectInputStream(statusobjectFIS);
 		} catch (Exception e) {

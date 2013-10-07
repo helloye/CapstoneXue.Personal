@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <PreferenceCategory
+        android:title="Deck changes: Changes take effect next round"
+        android:key="first_category">
+
+    	
+        <ListPreference
+            android:key="pref_ec_decksize"
+            android:title="@string/pref_ec_decksize_tit"
+            android:summary="Determines the size of the English to Chinese deck"
+            android:defaultValue="20"
+            android:entries="@array/arr_decksize"
+            android:entryValues="@array/arr_decksize_vals"
+            android:dependency="pref_ec_decksize"
+        /> 
+        <ListPreference
+            android:key="pref_ce_decksize"
+            android:title="@string/pref_ce_decksize_tit"
+            android:summary="Determines the size of the Chinese to English deck"
+            android:defaultValue="20"
+            android:entries="@array/arr_decksize"
+            android:entryValues="@array/arr_decksize_vals"
+            android:dependency="pref_ec_decksize"
+        /> 
+        <ListPreference
+            android:key="pref_deck_target"
+            android:title="@string/pref_deck_target_tit"
+            android:summary="Used to limit the cards mainly being learned"
+            android:defaultValue="700"
+            android:entries="@array/arr_targets"
+            android:entryValues="@array/arr_targets_vals"
+            android:dependency="pref_deck_target"
+        /> 
+        </PreferenceCategory>
+        
+        <PreferenceCategory
+        android:title="Misc"
+        android:key="second_category">
+    	<CheckBoxPreference
+        	android:key="pref_audio_feedback"
+        	android:title="@string/pref_audiofeedback_tit"
+        	android:summary="Hear audio effects?"
+        	android:defaultValue="true" />
+        	
+        </PreferenceCategory>
+        	
+
+
+</PreferenceScreen>

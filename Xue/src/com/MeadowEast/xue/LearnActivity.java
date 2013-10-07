@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.ActionMode.Callback;
@@ -25,15 +24,17 @@ import android.view.ViewManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
-import android.widget.Chronometer;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class LearnActivity extends Activity implements OnGestureListener, Callback {
+public class LearnActivity extends BaseActivity implements OnGestureListener, Callback {
 	static final String TAG = "LearnActivity";
-	static final int ECDECKSIZE = 4;
-	static final int CEDECKSIZE = 60;
+	static final int DEFAULT_ECDECKSIZE = 4;
+	static final int DEFAULT_CEDECKSIZE = 60;
 
+	private int _nECDeckSize;
+	private int _nCEDeckSize;
+	private int _nTarget;
 	
 	LearningProject lp;
 	int itemsShown;
@@ -42,7 +43,6 @@ public class LearnActivity extends Activity implements OnGestureListener, Callba
 
 	private SoundManager _soundManager;
 	private GestureDetector gestureScanner;
-	private Chronometer cMeter;
 	private static final int SWIPE_MIN_DISTANCE = 120;
 	private static final int SWIPE_THRESHOLD_VELOCITY = 150;
 	
@@ -54,6 +54,11 @@ public class LearnActivity extends Activity implements OnGestureListener, Callba
         
         Log.d(TAG, "Entering onCreate");
 
+        // Get the deck sizes from the preferences
+        _nECDeckSize  = getECDeckSizePreference();
+        _nCEDeckSize = getCEDeckSizePreference();
+        _nTarget = getTargetPreference();
+        
         //Create sound manager and gesture detector below.
         _soundManager = SoundManager.getInstance();
         gestureScanner = new GestureDetector(this);
@@ -63,7 +68,6 @@ public class LearnActivity extends Activity implements OnGestureListener, Callba
         status  = (TextView) findViewById(R.id.statusTextView);
         other   = (TextView) findViewById(R.id.otherTextView);
         answer  = (TextView) findViewById(R.id.answerTextView);
-        cMeter = (Chronometer) findViewById(R.id.chronometerLearn);
         //advance  = (Button) findViewById(R.id.advanceButton);
         //okay     = (Button) findViewById(R.id.okayButton);
     	   
@@ -81,13 +85,13 @@ public class LearnActivity extends Activity implements OnGestureListener, Callba
 			}
     	});
     	
-    	if (MainActivity.mode.equals("ec")){
-    		lp = new EnglishChineseProject(ECDECKSIZE);	
+    	if (MainActivity.mode.equals("ec")) {
+    		lp = new EnglishChineseProject( _nECDeckSize, _nTarget );	
     		other.setTextIsSelectable(true);					//If e-c mode, set other chinese txtview to selectable and add callback.
         	other.setCustomSelectionActionModeCallback(this);
     	}
-    	else{
-    		lp = new ChineseEnglishProject(CEDECKSIZE);
+    	else {
+    		lp = new ChineseEnglishProject( _nCEDeckSize, _nTarget );
     		prompt.setTextIsSelectable(true);					//If c-e mode chinese text view is in prompt.
         	prompt.setCustomSelectionActionModeCallback(this);
     	}
@@ -98,7 +102,7 @@ public class LearnActivity extends Activity implements OnGestureListener, Callba
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_main, menu);
+        super.onCreateOptionsMenu(menu);
         return true;
     }
     
@@ -155,7 +159,7 @@ public class LearnActivity extends Activity implements OnGestureListener, Callba
     //UNDO FUNCTION//
 	/////////////////
     private void doUndo(){
-    	lp.undo();
+    	//lp.undo();
     	clearContent();
     	prompt.setText(lp.prompt());
     	itemsShown = 1;
@@ -191,7 +195,7 @@ public class LearnActivity extends Activity implements OnGestureListener, Callba
 			itemsShown = 1;
 			status.setText(lp.deckStatus());
 			Animation swipeAnimation;
-			swipeAnimation = AnimationUtils.loadAnimation(this, R.anim.bottom_to_top_slide);
+			swipeAnimation = AnimationUtils.loadAnimation( this, R.anim.bottom_to_top_slide );
     		prompt.startAnimation(swipeAnimation);
     		status.startAnimation(swipeAnimation);
 		} else {
@@ -278,28 +282,6 @@ public class LearnActivity extends Activity implements OnGestureListener, Callba
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
-/////////////////////
-//CHRONOMETER TIMER//
-/////////////////////
-	
-	private long elapsedTime=0;
-	
-	@Override 
-	public void onPause(){
-		super.onPause();
-		elapsedTime = SystemClock.elapsedRealtime() - cMeter.getBase();
-		cMeter.stop();
- 	}
-	
-	@Override
-	public void onResume(){
-		super.onResume();
-		cMeter.setBase(SystemClock.elapsedRealtime() - elapsedTime);
-		cMeter.start();
-	}
-	
-	
 
 /////////////////////////
 // SWIPE GESTURES START//
@@ -327,14 +309,14 @@ public class LearnActivity extends Activity implements OnGestureListener, Callba
 			}
 			//left to right -> undo
 			else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY){
-				if(lp.isUndoEmpty())
+				/*if(lp.isUndoEmpty())
 					Toast.makeText(getApplicationContext(), "Nothing to undo!", Toast.LENGTH_SHORT).show();
 				else{
 					doUndo();
 					swipeAnimation = AnimationUtils.loadAnimation(this, R.anim.left_to_righ_slide);
 					prompt.startAnimation(swipeAnimation);
 					status.startAnimation(swipeAnimation);
-				}
+				}*/
 			}
 			// bottom to top ->get rid of card only if itemsShown is at least 1
 			else if(e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY){
@@ -412,4 +394,23 @@ public class LearnActivity extends Activity implements OnGestureListener, Callba
 		return false;
 	}
     
+	public int getCEDeckSize() {
+	    return this._nCEDeckSize;
+	}
+	public void setCEDeckSize( int nNewDeckSize ) {
+	     this._nCEDeckSize = nNewDeckSize;
+	}
+	public int getECDeckSize() {
+	    return this._nECDeckSize;
+	}
+	public void setECDeckSize( int nNewDeckSize ) {
+	     this._nECDeckSize = nNewDeckSize;
+	}
+	
+	 @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // The activity is about to be destroyed.
+        
+    } 
 }

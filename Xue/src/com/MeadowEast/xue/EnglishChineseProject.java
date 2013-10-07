@@ -3,8 +3,8 @@ package com.MeadowEast.xue;
 import java.util.*;
 
 public class EnglishChineseProject extends LearningProject {
-	EnglishChineseProject(int n){
-		super("EnglishChinese", n);
+	EnglishChineseProject(int n, int nTarget){
+		super("EnglishChinese", n, nTarget );
 	}
 	protected String prompt(){
 		return card.getEnglish();

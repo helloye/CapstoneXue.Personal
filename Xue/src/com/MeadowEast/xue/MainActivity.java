@@ -29,7 +29,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements OnClickListener {
+public class MainActivity extends BaseActivity implements OnClickListener {
 
 	Button ecButton, ceButton, ecLogButton, ceLogButton, exitButton;
 	public static File filesDir;
@@ -57,7 +57,7 @@ public class MainActivity extends Activity implements OnClickListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);  
         
         ecButton   = (Button) findViewById(R.id.ecButton);
         ceButton   = (Button) findViewById(R.id.ceButton);
@@ -97,10 +97,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		Log.d(TAG, "Initializing Sound Manager.");
         _soundManager = SoundManager.getInstance();
         _soundManager.init( this.getApplicationContext() );
+        _soundManager.setPlayAudioSoundFX( getAudioFeedbackPreference() );
 		
 		Log.d(TAG, "Initializing Network Manager.");
 		_networkManager = NetworkManager.getInstance();
-        _networkManager.init();
+		
     }
 
 	public void UpdateVocab( View view ) throws MalformedURLException, IOException {
@@ -160,11 +161,17 @@ public class MainActivity extends Activity implements OnClickListener {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_main, menu);
+    	super.onCreateOptionsMenu(menu);
+
         return true;
     }   
     
-    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // The activity is about to be destroyed.
+        _soundManager.dispose();
+    } 
     
     /*
      * Check if SD card is mounted and writable

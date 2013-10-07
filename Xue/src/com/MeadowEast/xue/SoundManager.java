@@ -14,19 +14,29 @@ final public class SoundManager {
 	private static SoundManager instance = null;
 	static final String TAG = "CC SoundManager";
 	
-	private Context _context;
-	private SoundPool _soundPool;
-	private AudioManager _audioManager;
-	private MediaPlayer _mediaPlayer;
+	/** Needs access to the application context which gets recreated every orientation change, etc */
+	private Context 			_context;
 	
+	/** Wrapper for playing short sound files */
+	private SoundPool 			_soundPool;
 	
-	private boolean fIsInitialized;
+	/** Wrapper for accessing audio settings and capabilities */
+	private AudioManager 		_audioManager;
 	
+	/** Wrapper for playing/streaming long media files */
+	private MediaPlayer 		_mediaPlayer;
+	
+	/** Helps ensure an exception is not throws if the manager has not been initialized */
+	private boolean _fIsInitialized;
+	
+	/** Whether to play audio sounds effects */
+	private boolean _fPlayAudioSoundFX;
+	
+	/** Used to store all the media sound ids */
 	public enum Sounds { SND_RIGHT, SND_WRONG, SND_BG };
 	
-	/** Hashmap containg the sound effects and the id*/
-	private HashMap<Integer, Integer> _soundIDMap;
-
+	/** Hashmap containing the sound effects and the id */
+	private HashMap<Sounds, Integer> _soundIDMap;
 
     /** Default volume for sound playback relative to current stream volume. */
     public static final float DEFAULT_VOLUME = 1.0f;
@@ -51,21 +61,24 @@ final public class SoundManager {
 	
 	public void init( Context context ) {
 		
+		if ( _fIsInitialized )
+			return;
+		
 		if ( context == null ) {
 			throw new NullPointerException( "Context is null." );
 		}
 		_context = context;
 		
 		// Allocate
-		_soundIDMap = new HashMap<Integer, Integer>();
+		_soundIDMap = new HashMap<Sounds, Integer>();
 		_soundPool = new SoundPool( 5, AudioManager.STREAM_MUSIC, 0);
 		_audioManager = (AudioManager)_context.getSystemService( Context.AUDIO_SERVICE );
 		_mediaPlayer = new MediaPlayer();
 		
 		// Load all the sound effect files
 		try {
-			_soundIDMap.put( Sounds.SND_RIGHT.ordinal(), _soundPool.load( context, R.raw.xue_right, 1 ) );
-			_soundIDMap.put( Sounds.SND_WRONG.ordinal(), _soundPool.load( context, R.raw.xue_wrong, 1 ) );
+			_soundIDMap.put( Sounds.SND_RIGHT, _soundPool.load( context, R.raw.xue_right, 1 ) );
+			_soundIDMap.put( Sounds.SND_WRONG, _soundPool.load( context, R.raw.xue_wrong, 1 ) );
 			// ..
 		}
 		catch( Exception ex ) {
@@ -74,7 +87,7 @@ final public class SoundManager {
 			
 		}
 		
-		fIsInitialized = true; 
+		_fIsInitialized = true;
 	}
 	
     /**
@@ -85,7 +98,7 @@ final public class SoundManager {
      * @param pan The panning value, range {-1...1} where 0 is center.
      * @throws IllegalArgumentException, RuntimeException
      */
-    public void play( int id, float rate, float pan ) {
+    public void play( Sounds id, float rate, float pan ) {
     	
         int soundId = _soundIDMap.get( id );
         if ( soundId == 0 ) {
@@ -106,15 +119,20 @@ final public class SoundManager {
 
     }
     
-    public void play( int nSoundID ) {
-    	play( nSoundID, 1, 0 );
-    }
-    
-	public void playSoundFX( int nSoundFXID )
+	public void playSoundFX( Sounds nSoundFXID )
 	{
+		if ( !_fPlayAudioSoundFX )
+			return;
+		
 		play( nSoundFXID, 1, 0 );
 	}
 
+	public boolean getPlayAudioSoundFX( ) {
+		return this._fPlayAudioSoundFX;
+	}
+	public void setPlayAudioSoundFX( boolean bPlayAudio ) {
+		_fPlayAudioSoundFX = bPlayAudio;
+	}
 	
 	public void playBGMusic( Context context, int nResourceID, boolean bLoop ) {
 		//String strPath = "android.resource://" + context.getPackageName() + "/" + nResourceID;
@@ -147,10 +165,16 @@ final public class SoundManager {
 	}
 	
 	public void pauseBGMusic() {
+		_mediaPlayer.pause();
 		
 	}
+	
+	public void resumeBGMusic() {
+		_mediaPlayer.start();
+	}
+	
 	public void stopBGMusic() {
-		
+		_mediaPlayer.stop();
 	}
 	
 
@@ -165,7 +189,7 @@ final public class SoundManager {
 	}
 	
 	public boolean isInitialized() {
-		return fIsInitialized;
+		return _fIsInitialized;
 	}
 	
 }
