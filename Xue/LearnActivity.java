@@ -27,14 +27,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class LearnActivity extends BaseActivity implements OnGestureListener, Callback {
+public class LearnActivity extends Activity implements OnGestureListener, Callback {
 	static final String TAG = "LearnActivity";
-	static final int DEFAULT_ECDECKSIZE = 5;
-	static final int DEFAULT_CEDECKSIZE = 5;
+	static final int ECDECKSIZE = 4;
+	static final int CEDECKSIZE = 60;
 
-	private int _nECDeckSize;
-	private int _nCEDeckSize;
-	private int _nTarget;
 	
 	LearningProject lp;
 	int itemsShown;
@@ -54,11 +51,6 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
         
         Log.d(TAG, "Entering onCreate");
 
-        // Get the deck sizes from the preferences
-        _nECDeckSize  = getECDeckSizePreference();
-        _nCEDeckSize = getCEDeckSizePreference();
-        _nTarget = getTargetPreference();
-        
         //Create sound manager and gesture detector below.
         _soundManager = SoundManager.getInstance();
         gestureScanner = new GestureDetector(this);
@@ -85,13 +77,13 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 			}
     	});
     	
-    	if (MainActivity.mode.equals("ec")) {
-    		lp = new EnglishChineseProject( _nECDeckSize, _nTarget );	
+    	if (MainActivity.mode.equals("ec")){
+    		lp = new EnglishChineseProject(ECDECKSIZE);	
     		other.setTextIsSelectable(true);					//If e-c mode, set other chinese txtview to selectable and add callback.
         	other.setCustomSelectionActionModeCallback(this);
     	}
-    	else {
-    		lp = new ChineseEnglishProject( _nCEDeckSize, _nTarget );
+    	else{
+    		lp = new ChineseEnglishProject(CEDECKSIZE);
     		prompt.setTextIsSelectable(true);					//If c-e mode chinese text view is in prompt.
         	prompt.setCustomSelectionActionModeCallback(this);
     	}
@@ -102,7 +94,7 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
     }
     
@@ -195,7 +187,7 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 			itemsShown = 1;
 			status.setText(lp.deckStatus());
 			Animation swipeAnimation;
-			swipeAnimation = AnimationUtils.loadAnimation( this, R.anim.bottom_to_top_slide );
+			swipeAnimation = AnimationUtils.loadAnimation(this, R.anim.bottom_to_top_slide);
     		prompt.startAnimation(swipeAnimation);
     		status.startAnimation(swipeAnimation);
 		} else {
@@ -310,10 +302,10 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 			//left to right -> undo
 			else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY){
 				if(lp.isUndoEmpty())
-					Toast.makeText(this, "No Cards To Undo!!", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "Nothing to undo!", Toast.LENGTH_SHORT).show();
 				else{
 					doUndo();
-					swipeAnimation = AnimationUtils.loadAnimation(this, R.anim.left_to_right_slide);
+					swipeAnimation = AnimationUtils.loadAnimation(this, R.anim.left_to_righ_slide);
 					prompt.startAnimation(swipeAnimation);
 					status.startAnimation(swipeAnimation);
 				}
@@ -365,20 +357,9 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 
 	public boolean onActionItemClicked(ActionMode arg0, MenuItem arg1) {
 		// TODO Auto-generated method stub
-		
-		String selected;
-		
-		if(MainActivity.mode.equals("ec")){
-			int start = other.getSelectionStart();
-			int end = other.getSelectionEnd();
-			selected = other.getText().toString().substring(start, end);
-		}
-		else{
-			int start = prompt.getSelectionStart();
-			int end = prompt.getSelectionEnd();
-			selected = prompt.getText().toString().substring(start, end);	
-		}
-		
+		int start = other.getSelectionStart();
+		int end = other.getSelectionEnd();
+		String selected = other.getText().toString().substring(start, end);
 		if(arg1.getItemId()==0){ //If the thing clicked is the Lookup button
 			//Toast.makeText(this, "HELLO MDBG.net! - " + arg1.getItemId(), Toast.LENGTH_SHORT).show();
 			String url = "http://www.mdbg.net/chindict/chindict.php?page=worddict&wdrst=0&wdqb=" + selected;
@@ -405,23 +386,4 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 		return false;
 	}
     
-	public int getCEDeckSize() {
-	    return this._nCEDeckSize;
-	}
-	public void setCEDeckSize( int nNewDeckSize ) {
-	     this._nCEDeckSize = nNewDeckSize;
-	}
-	public int getECDeckSize() {
-	    return this._nECDeckSize;
-	}
-	public void setECDeckSize( int nNewDeckSize ) {
-	     this._nECDeckSize = nNewDeckSize;
-	}
-	
-	 @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // The activity is about to be destroyed.
-        
-    } 
 }

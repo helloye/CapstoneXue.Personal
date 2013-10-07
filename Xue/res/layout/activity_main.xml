@@ -29,6 +29,7 @@
         android:textSize="40sp" 
         android:textColor="#FFFFFF" />
     
+    <!--
     <Button
         android:id="@+id/btnGetVocab"
         android:layout_width="fill_parent"
@@ -37,6 +38,7 @@
         android:text="@string/update_vocab" 
         android:textSize="30sp" 
         android:textColor="#FFFFFF" />
+    -->
     
     <Button
         android:id="@+id/ecLogButton"

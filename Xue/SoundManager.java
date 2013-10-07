@@ -14,29 +14,19 @@ final public class SoundManager {
 	private static SoundManager instance = null;
 	static final String TAG = "CC SoundManager";
 	
-	/** Needs access to the application context which gets recreated every orientation change, etc */
-	private Context 			_context;
+	private Context _context;
+	private SoundPool _soundPool;
+	private AudioManager _audioManager;
+	private MediaPlayer _mediaPlayer;
 	
-	/** Wrapper for playing short sound files */
-	private SoundPool 			_soundPool;
 	
-	/** Wrapper for accessing audio settings and capabilities */
-	private AudioManager 		_audioManager;
+	private boolean fIsInitialized;
 	
-	/** Wrapper for playing/streaming long media files */
-	private MediaPlayer 		_mediaPlayer;
-	
-	/** Helps ensure an exception is not throws if the manager has not been initialized */
-	private boolean _fIsInitialized;
-	
-	/** Whether to play audio sounds effects */
-	private boolean _fPlayAudioSoundFX;
-	
-	/** Used to store all the media sound ids */
 	public enum Sounds { SND_RIGHT, SND_WRONG, SND_BG };
 	
-	/** Hashmap containing the sound effects and the id */
+	/** Hashmap containg the sound effects and the id*/
 	private HashMap<Sounds, Integer> _soundIDMap;
+
 
     /** Default volume for sound playback relative to current stream volume. */
     public static final float DEFAULT_VOLUME = 1.0f;
@@ -61,9 +51,6 @@ final public class SoundManager {
 	
 	public void init( Context context ) {
 		
-		if ( _fIsInitialized )
-			return;
-		
 		if ( context == null ) {
 			throw new NullPointerException( "Context is null." );
 		}
@@ -87,7 +74,7 @@ final public class SoundManager {
 			
 		}
 		
-		_fIsInitialized = true;
+		fIsInitialized = true;
 	}
 	
     /**
@@ -119,20 +106,15 @@ final public class SoundManager {
 
     }
     
+    public void play( Sounds nSoundID ) {
+    	play( nSoundID, 1, 0 );
+    }
+    
 	public void playSoundFX( Sounds nSoundFXID )
 	{
-		if ( !_fPlayAudioSoundFX )
-			return;
-		
 		play( nSoundFXID, 1, 0 );
 	}
 
-	public boolean getPlayAudioSoundFX( ) {
-		return this._fPlayAudioSoundFX;
-	}
-	public void setPlayAudioSoundFX( boolean bPlayAudio ) {
-		_fPlayAudioSoundFX = bPlayAudio;
-	}
 	
 	public void playBGMusic( Context context, int nResourceID, boolean bLoop ) {
 		//String strPath = "android.resource://" + context.getPackageName() + "/" + nResourceID;
@@ -165,33 +147,25 @@ final public class SoundManager {
 	}
 	
 	public void pauseBGMusic() {
-		_mediaPlayer.pause();
 		
 	}
-	
-	public void resumeBGMusic() {
-		_mediaPlayer.start();
-	}
-	
 	public void stopBGMusic() {
-		_mediaPlayer.stop();
+		
 	}
 	
 
 	public void dispose( )
 	{
-		if(instance != null){
 		_soundPool.release();
 		_mediaPlayer.stop();
 		_mediaPlayer.release();
 		_mediaPlayer = null;
 		_soundPool = null;
-		}
 		
 	}
 	
 	public boolean isInitialized() {
-		return _fIsInitialized;
+		return fIsInitialized;
 	}
 	
 }

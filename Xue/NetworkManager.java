@@ -20,6 +20,9 @@ public class NetworkManager {
 	    return instance;
 	}
 	
+	public void init() {
+	}
+	
 	public boolean isOnline( Context contex ) {
         ConnectivityManager connectivity = (ConnectivityManager) contex.getSystemService( Context.CONNECTIVITY_SERVICE );
           if (connectivity != null) {

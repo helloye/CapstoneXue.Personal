@@ -2,12 +2,12 @@ package com.MeadowEast.xue;
 
 import java.util.*;
 
-public class ChineseEnglishProject extends LearningProject {
-	ChineseEnglishProject(int n, int nTarget ){
-		super("ChineseEnglish", n, nTarget );
+public class EnglishChineseProject extends LearningProject {
+	EnglishChineseProject(int n){
+		super("EnglishChinese", n);
 	}
 	protected String prompt(){
-		return card.getHanzi();
+		return card.getEnglish();
 	}
 	
 	protected String answer(){
@@ -15,7 +15,7 @@ public class ChineseEnglishProject extends LearningProject {
 	}
 	
 	protected String other(){
-		return card.getEnglish();
+		return card.getHanzi();
 	}
 	public void addNewItems(){ addNewItems(0); }
 	public void addNewItems(int n){

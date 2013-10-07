@@ -2,30 +2,22 @@ package com.MeadowEast.xue;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -37,7 +29,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends BaseActivity implements OnClickListener {
+public class MainActivity extends Activity implements OnClickListener {
 
 	Button ecButton, ceButton, ecLogButton, ceLogButton, exitButton;
 	public static File filesDir;
@@ -45,16 +37,15 @@ public class MainActivity extends BaseActivity implements OnClickListener {
 	static final String TAG = "XUE MainActivity";
 	public static String gStrVocabFileName;
 	
-	//private Button 			_btnUpdateVocab;
+	private Button 			_btnUpdateVocab;
 	private NetworkManager 	_networkManager = null;
 	private SoundManager 	_soundManager = null;
 	private static boolean 	_bSDCardOkay;
-	boolean fDesiresUpdate = false;
 	
 	// Progress Dialog
     private ProgressDialog pDialog;
     
-    private UpdateHelper _updateCards;
+    private CardUpdater _updateCards;
 
     // Progress dialog type (0 - for Horizontal progress bar)
     public static final int progress_bar_type = 0; 
@@ -63,22 +54,10 @@ public class MainActivity extends BaseActivity implements OnClickListener {
     private static String _strVocabURL = "http://www.meadoweast.com/capstone/vocabUTF8.txt";
     private String _strVocabDestPath;
 	
-    Thread quittingThread = new Thread(){
-        @Override
-       public void run() {
-            try {
-               Thread.sleep(2000); // As I am using LENGTH_SHORT in Toast
-               MainActivity.this.finish();
-           } catch (Exception e) {
-               e.printStackTrace();
-           }
-        }  
-      };
-      
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);  
+        setContentView(R.layout.activity_main);
         
         ecButton   = (Button) findViewById(R.id.ecButton);
         ceButton   = (Button) findViewById(R.id.ceButton);
@@ -91,80 +70,60 @@ public class MainActivity extends BaseActivity implements OnClickListener {
     	ceLogButton.setOnClickListener(this);
     	exitButton.setOnClickListener(this);
     	
-    	
     	// Make sure the SD Card is available and writeable, if not, kill the app
     	checkSDCard();
     	
-    	// construct the path to the card vocabulary
         File sdCard = Environment.getExternalStorageDirectory();
 		filesDir = new File ( sdCard.getAbsolutePath() + "/Android/data/com.MeadowEast.xue/files" );
 		gStrVocabFileName = "vocab.txt";
 		_strVocabDestPath = filesDir + gStrVocabFileName;
 		File fileVocab = new File( filesDir.getPath() + gStrVocabFileName );
-		
 		//get the file from the resource folder and copy it to the app dir if it doesn't exist already
 		if ( !fileVocab.exists() ) {
-			try {
+		
+			try
+			{
 				Common.CopyStreamToFile( this.getResources().openRawResource( R.raw.vocab ), 
 												filesDir, gStrVocabFileName );
 			}
-			catch( Exception ex ) {
+			catch( Exception ex )
+			{
 				Log.d( TAG, ex.getMessage() );
 			}
     	}
 		Log.d(TAG, "xxx filesDir="+filesDir);
 		
-		// Check if there is a newer version available
-		fDesiresUpdate = false;
-		try {
-			UpdateVocab();
-		} catch (Exception e) {
-			Log.e(TAG, "Update failed.");
-			Toast.makeText(this,"Attempt to update the cards failed!", Toast.LENGTH_LONG).show();
-		} 
 		
 		Log.d(TAG, "Initializing Sound Manager.");
         _soundManager = SoundManager.getInstance();
         _soundManager.init( this.getApplicationContext() );
-        _soundManager.setPlayAudioSoundFX( getAudioFeedbackPreference() );
 		
 		Log.d(TAG, "Initializing Network Manager.");
 		_networkManager = NetworkManager.getInstance();
-		
+        _networkManager.init();
     }
 
-	public void UpdateVocab() throws MalformedURLException, IOException {
+	public void UpdateVocab( View view ) throws MalformedURLException, IOException {
 		
-		// Helper fucntions to determine if an update is possible
-		_updateCards = new UpdateHelper();
-		
+		_updateCards = new CardUpdater();
 	     // Get the new vocabulary
-		//this._btnUpdateVocab = (Button)this.findViewById( R.id.btnGetVocab );
+		this._btnUpdateVocab = (Button)this.findViewById( R.id.btnGetVocab );
 		  
-		// check every 2 weeks if the vocab file on the server is newer
-		//ANTHONY THIS IS CURRENTLY SET TO NOT UPDATE.
-		if (! !_updateCards.shouldUpdate( this.getApplicationContext(), filesDir.getPath() + gStrVocabFileName, _strVocabURL ) ) {
-			
-			// Ask the user if they want to update
-			new AlertDialog.Builder(this)
-            .setIcon(android.R.drawable.ic_dialog_alert)
-            .setTitle(R.string.updateAvailable)
-            .setMessage(R.string.desireUpdate)
-            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                	fDesiresUpdate = true;    
-                }
-            })
-            .setNegativeButton(R.string.no, null)
-            .show();
-
-			// if they dont't want to update, escape
-			if ( !fDesiresUpdate )
-				return;
-			
-	        // They do!  Start the update.
+		if ( !_updateCards.shouldUpdate() ) {
+        	Toast toast = Toast.makeText( this, "Already up to date.", Toast.LENGTH_SHORT );
+    		toast.show();
+        }
+        else {
+	        // Start the update
 	        DownloadFileFromURL task = new DownloadFileFromURL( this );
-	        task.execute( _strVocabURL );
+	        try {
+	        	task.execute( _strVocabURL );
+	        }
+	        catch( Exception ex ) {
+	        	Toast toast = Toast.makeText( this, "Error Updating File.", Toast.LENGTH_SHORT );
+	    		toast.show();
+	    		dismissDialog( progress_bar_type );
+	        }
         }
 		
 	 }
@@ -201,31 +160,24 @@ public class MainActivity extends BaseActivity implements OnClickListener {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-    	super.onCreateOptionsMenu(menu);
-
+        getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
     }   
     
-    @Override
-    protected void onDestroy() {
-    	_soundManager.dispose();
-        super.onDestroy();
-        // The activity is about to be destroyed.
-    } 
+    
     
     /*
      * Check if SD card is mounted and writable
      */
     private boolean checkSDCard(){
     
-       String state = Environment.getExternalStorageState();
+       String state = android.os.Environment.getExternalStorageState();
        boolean sdcard_avail =  state.equals(android.os.Environment.MEDIA_MOUNTED);
        boolean sdcard_readonly =  state.equals(android.os.Environment.MEDIA_MOUNTED_READ_ONLY);
     
            if ( ! sdcard_avail || sdcard_readonly ){
         	   _bSDCardOkay = false;
         	   
-        	   /*
                LayoutInflater inflater = getLayoutInflater();
 	           View dview = inflater.inflate(R.layout.alert_card, null);
 	           
@@ -241,24 +193,10 @@ public class MainActivity extends BaseActivity implements OnClickListener {
 	               public void onClick( View v ) {
 	               dialog.dismiss();
 	               MainActivity.this.finish();
-	               //Toast.makeText(this,"This is a Toast", Toast.LENGTH_LONG).show();
-	               //quittingThread.start();
 	              }
 	           });
 	           dialog.show();
 	           }
-	           */
-        	   new AlertDialog.Builder(this)
-               .setIcon(android.R.drawable.ic_dialog_alert)
-               .setTitle( R.string.alert_tit )
-               .setMessage( !sdcard_avail ? R.string.no_sdcard :  R.string.sdcard_read_only )
-               .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                   public void onClick(DialogInterface dialog, int which) {
-                	   MainActivity.this.finish(); 
-                   }
-               })
-               .show();
-           }
            else {
         	   _bSDCardOkay = true;
            }
@@ -275,7 +213,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
             pDialog = new ProgressDialog(this);
             pDialog.setMessage("Downloading cards...");
             pDialog.setIndeterminate(false);
-            //pDialog.setMax(100);
+            pDialog.setMax(100);
             pDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             pDialog.setCancelable(true);
             pDialog.show();
@@ -304,7 +242,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
 		@Override
         protected void onPreExecute() {
             super.onPreExecute();
-            pDialog.show();//showDialog( progress_bar_type );
+            showDialog( progress_bar_type );
         }
  
         public DownloadFileFromURL( Context context ) {
@@ -339,7 +277,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
                 // download the file
                 input = new BufferedInputStream(url.openStream(), 8192);
 
-                // save it to a temporary file
+                // Output stream
                 output = new FileOutputStream( _strVocabDestPath + ".tmp" );
  
                 byte data[] = new byte[1024];
@@ -383,7 +321,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
         @SuppressWarnings("deprecation")
 		@Override
         protected void onPostExecute(String file_url) {
-        	// Rename the temporary txt file
+        	// Rename the txt file
         	File fileOld = new File( _strVocabDestPath + ".tmp");
         	File fileUpdated = new File( _strVocabDestPath );
         	try {
@@ -395,17 +333,17 @@ public class MainActivity extends BaseActivity implements OnClickListener {
         		toast.show();
         		// get rid of the temp file if it exists
         		_updateCards.deleteTemp();
+        		finish();
 
         	}
             // dismiss the dialog after the file was downloaded
-        	pDialog.dismiss();
-            //dismissDialog( progress_bar_type );
+            dismissDialog( progress_bar_type );
             // Displaying downloaded image into image view
             // Reading image path from sdcard
             //String imagePath = Environment.getExternalStorageDirectory().toString() + "/downloadedfile.jpg";
             // setting downloaded into image view
             //my_image.setImageDrawable(Drawable.createFromPath(imagePath));
-        }     
+        }
  
     }
 
