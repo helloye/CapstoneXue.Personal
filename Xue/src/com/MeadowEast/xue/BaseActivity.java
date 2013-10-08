@@ -1,8 +1,6 @@
 package com.MeadowEast.xue;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -32,7 +30,7 @@ public class BaseActivity extends Activity {
 		_sharedPrefListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
 			  public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
 				  
-				  // the target changed, have to make a new deck
+				  // change the audio feedback in the sound manager instance
 				  if ( key.equals( "pref_audio_feedback" ) ) {
 					  
 					  _soundManager.setPlayAudioSoundFX( getAudioFeedbackPreference() );

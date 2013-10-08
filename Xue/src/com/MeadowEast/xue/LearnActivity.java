@@ -1,6 +1,7 @@
 package com.MeadowEast.xue;
 
 import java.io.IOException;
+import java.net.ConnectException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -8,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.ActionMode.Callback;
@@ -24,13 +26,14 @@ import android.view.ViewManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class LearnActivity extends BaseActivity implements OnGestureListener, Callback {
 	static final String TAG = "LearnActivity";
-	static final int DEFAULT_ECDECKSIZE = 4;
-	static final int DEFAULT_CEDECKSIZE = 60;
+	static final int DEFAULT_ECDECKSIZE = 20;
+	static final int DEFAULT_CEDECKSIZE = 20;
 
 	private int _nECDeckSize;
 	private int _nCEDeckSize;
@@ -40,10 +43,11 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 	int itemsShown;
 	TextView prompt, answer, other, status;
 	Button advance, okay;
-
+	Chronometer cMeter;
+	
 	private SoundManager _soundManager;
 	private GestureDetector gestureScanner;
-	private static final int SWIPE_MIN_DISTANCE = 120;
+	private static final int SWIPE_MIN_DISTANCE = 100;
 	private static final int SWIPE_THRESHOLD_VELOCITY = 150;
 	
     @Override
@@ -68,6 +72,7 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
         status  = (TextView) findViewById(R.id.statusTextView);
         other   = (TextView) findViewById(R.id.otherTextView);
         answer  = (TextView) findViewById(R.id.answerTextView);
+        cMeter = (Chronometer) findViewById(R.id.timer1);
         //advance  = (Button) findViewById(R.id.advanceButton);
         //okay     = (Button) findViewById(R.id.okayButton);
     	   
@@ -98,6 +103,25 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 		
     	clearContent();
     	doAdvance();
+
+    }
+    
+    //Chronometer start and stop below!!
+    
+    private long lastPaused=0;
+    
+    @Override
+    protected void onPause(){
+    	super.onPause();
+    	lastPaused=(SystemClock.elapsedRealtime() - cMeter.getBase());
+    	cMeter.stop();
+    }
+    
+    @Override
+	protected void onResume(){
+    	super.onResume();
+    	cMeter.setBase(SystemClock.elapsedRealtime() - lastPaused);
+    	cMeter.start();
     }
 
     @Override
@@ -159,7 +183,7 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
     //UNDO FUNCTION//
 	/////////////////
     private void doUndo(){
-    	//lp.undo();
+    	lp.undo();
     	clearContent();
     	prompt.setText(lp.prompt());
     	itemsShown = 1;
@@ -309,14 +333,14 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 			}
 			//left to right -> undo
 			else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY){
-				/*if(lp.isUndoEmpty())
-					Toast.makeText(getApplicationContext(), "Nothing to undo!", Toast.LENGTH_SHORT).show();
+				if(lp.isUndoEmpty())
+					Toast.makeText(this, "No Cards To Undo!!", Toast.LENGTH_SHORT).show();
 				else{
 					doUndo();
-					swipeAnimation = AnimationUtils.loadAnimation(this, R.anim.left_to_righ_slide);
+					swipeAnimation = AnimationUtils.loadAnimation(this, R.anim.left_to_right_slide);
 					prompt.startAnimation(swipeAnimation);
 					status.startAnimation(swipeAnimation);
-				}*/
+				}
 			}
 			// bottom to top ->get rid of card only if itemsShown is at least 1
 			else if(e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY){
@@ -365,9 +389,26 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 
 	public boolean onActionItemClicked(ActionMode arg0, MenuItem arg1) {
 		// TODO Auto-generated method stub
-		int start = other.getSelectionStart();
-		int end = other.getSelectionEnd();
-		String selected = other.getText().toString().substring(start, end);
+		
+		String selected;
+		Log.d(TAG, "Initializing Network Manager.");
+		NetworkManager networkManager = NetworkManager.getInstance();
+		if(!networkManager.isOnline(getApplicationContext())){
+			Toast.makeText(getApplicationContext(), "No network connection!!", Toast.LENGTH_LONG).show();
+			return false;
+		}
+		
+		if(MainActivity.mode.equals("ec")){
+			int start = other.getSelectionStart();
+			int end = other.getSelectionEnd();
+			selected = other.getText().toString().substring(start, end);
+		}
+		else{
+			int start = prompt.getSelectionStart();
+			int end = prompt.getSelectionEnd();
+			selected = prompt.getText().toString().substring(start, end);	
+		}
+		
 		if(arg1.getItemId()==0){ //If the thing clicked is the Lookup button
 			//Toast.makeText(this, "HELLO MDBG.net! - " + arg1.getItemId(), Toast.LENGTH_SHORT).show();
 			String url = "http://www.mdbg.net/chindict/chindict.php?page=worddict&wdrst=0&wdqb=" + selected;

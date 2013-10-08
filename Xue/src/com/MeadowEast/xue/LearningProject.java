@@ -15,6 +15,7 @@ abstract public class LearningProject {
 	private int _nDeckSize, _seen;
 	protected List<IndexSet> indexSets;
 	protected Map<Integer, Date> timestamps;
+	protected Stack<CardStatus> undoStack;
 	protected Deck deck;
 	protected CardStatus cardStatus = null;
 	protected Card card = null;	
@@ -28,6 +29,7 @@ abstract public class LearningProject {
 		this._nDeckSize = nDeckSize;
 		this._name = name;
 		this._seen = 0;
+		undoStack = new Stack<CardStatus>();
 		//this._nTarget = nTarget;
 		Log.d(TAG, "Creating index sets");
 		indexSets = new ArrayList<IndexSet>();
@@ -109,11 +111,32 @@ abstract public class LearningProject {
 	}
 	
 	public boolean next() {
-		if (deck.isEmpty()) return false;
+		if (deck.isEmpty()) {
+			_seen++;
+			return false;
+		}
 		cardStatus = deck.get();
 		_seen++;
 		card = AllCards.getCard(cardStatus.getIndex());
 		return true;
+	}
+	
+	public boolean isUndoEmpty(){
+		return undoStack.empty();
+	}
+	
+	public void undo(){
+		if(cardStatus!=null) //If there is a current card, put it back on top
+			deck.putFront(cardStatus);
+		
+		cardStatus = undoStack.pop(); //Get the last card
+		_seen--;
+		if(!deck.contains(cardStatus))//If the last card is not in the deck, it means it was marked correct thus remove it from indexSets
+			indexSets.get(cardStatus.getLevel()+1).add(cardStatus.getIndex());  //Should be in level +1
+		else if(deck.contains(cardStatus)) //else if it's wrong there is a duplicate in deck. remove the duplicate
+			deck.removeDuplicate(cardStatus);
+		
+		card = AllCards.getCard(cardStatus.getIndex()); //set current card
 	}
 	
 	public int currentIndex(){
@@ -129,12 +152,19 @@ abstract public class LearningProject {
 	abstract public void addNewItems(int n);
 	
 	public void right(){
+		undoStack.push(cardStatus);
 		cardStatus.right();
 		// put it in the appropriate index set
 		indexSets.get(cardStatus.getLevel()).add(cardStatus.getIndex());
-		
-		playRightSound();
-		
+		playRightSound();	
+	}
+	
+	public void wrong() {
+		undoStack.push(cardStatus);
+		cardStatus.wrong();
+		// return to the deck
+		deck.put(cardStatus);
+		playWrongSound();
 	}
 	
 	public void playRightSound()
@@ -147,14 +177,6 @@ abstract public class LearningProject {
 		if ( _soundManager.isInitialized() )
 			_soundManager.playSoundFX( Sounds.SND_WRONG);
 		
-	}
-	
-	public void wrong() {
-		cardStatus.wrong();
-		// return to the deck
-		deck.put(cardStatus);
-		
-		playWrongSound();
 	}
 	
 	String deckStatus(){

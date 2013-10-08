@@ -180,11 +180,13 @@ final public class SoundManager {
 
 	public void dispose( )
 	{
+		if(instance != null){
 		_soundPool.release();
 		_mediaPlayer.stop();
 		_mediaPlayer.release();
 		_mediaPlayer = null;
 		_soundPool = null;
+		}
 		
 	}
 	

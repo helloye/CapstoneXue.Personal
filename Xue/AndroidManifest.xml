@@ -49,6 +49,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.MeadowEast.xue.MainActivity" />
         </activity>
+        <activity 
+        	android:name="com.MeadowEast.xue.PrefsActivity"
+            android:label="@string/title_activity_preferences">
+        </activity>
+        
     </application>
 
 </manifest>

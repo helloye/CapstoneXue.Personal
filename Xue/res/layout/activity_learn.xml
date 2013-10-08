@@ -7,13 +7,14 @@
     android:orientation="vertical"
     android:padding="10dp" 
     android:background="@drawable/xue_bg">
-    
+
     <Chronometer
-        android:id="@+id/chronometerLearn"
+        android:id="@+id/timer1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF" />
-
+        android:textColor="#FFFFFF"
+        android:textSize="17dp" />
+    
     <TextView
         android:id="@+id/promptTextView"
         android:layout_width="fill_parent"
