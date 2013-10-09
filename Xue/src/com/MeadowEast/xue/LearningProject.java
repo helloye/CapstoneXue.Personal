@@ -131,10 +131,17 @@ abstract public class LearningProject {
 		
 		cardStatus = undoStack.pop(); //Get the last card
 		_seen--;
+<<<<<<< HEAD
 		if(!deck.contains(cardStatus))//If the last card is not in the deck, it means it was marked correct thus remove it from indexSets
 			indexSets.get(cardStatus.getLevel()+1).add(cardStatus.getIndex());  //Should be in level +1
 		else if(deck.contains(cardStatus)) //else if it's wrong there is a duplicate in deck. remove the duplicate
 			deck.removeDuplicate(cardStatus);
+=======
+		if(cardStatus != deck.getLast())//If the last card is not in the deck, it means it was marked correct thus remove it from indexSets
+			indexSets.get(cardStatus.getLevel()+1).add(cardStatus.getIndex());  //Should be in level +1
+		else //if(deck.contains(cardStatus)) //else if it's wrong there is a duplicate in deck. remove the duplicate
+			deck.removeLast(cardStatus);
+>>>>>>> incoming.merge.branch
 		
 		card = AllCards.getCard(cardStatus.getIndex()); //set current card
 	}

@@ -25,11 +25,16 @@ public class LogActivity extends Activity {
 		// Show the Up button in the action bar.
 		setupActionBar();
 		
+<<<<<<< HEAD
 		String fileName;
+=======
+		String ECfileName, CEfileName;
+>>>>>>> incoming.merge.branch
 		File logFileHandle;
 		BufferedReader reader;
 		logView = (TextView) findViewById(R.id.logTextView);
 		
+<<<<<<< HEAD
 		if(MainActivity.mode.equals("ec"))
 			fileName = "EnglishChinese.log.txt";
 		else
@@ -38,11 +43,16 @@ public class LogActivity extends Activity {
 		logFileHandle = new File(MainActivity.filesDir, fileName);
 		
 		//String parsing starts below!!
+=======
+		ECfileName = "EnglishChinese.log.txt";
+		CEfileName = "ChineseEnglish.log.txt";
+>>>>>>> incoming.merge.branch
 		String read, lastLine = null;
 		int deckCount = 0;
 		int learnedItems = 0;
 		int totalDailyLearned = 0;
 		
+<<<<<<< HEAD
 		try {
 			reader = new BufferedReader(new FileReader(logFileHandle));
 			while((read = reader.readLine()) != null){
@@ -59,12 +69,57 @@ public class LogActivity extends Activity {
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			logView.setText("Log File Not Found!!");
+=======
+		
+		logFileHandle = new File(MainActivity.filesDir, ECfileName);
+		
+		//String parsing starts below!!
+		
+		try {
+			reader = new BufferedReader(new FileReader(logFileHandle));
+			String[] initialParse = reader.readLine().split("[\\t ]+");
+			deckCount++;
+			int firstDay = Integer.parseInt(initialParse[0].substring(0, initialParse[0].indexOf("/", 0)));
+			int dayCount = firstDay;
+			while((read = reader.readLine()) != null && dayCount < firstDay+7){ //Will stop if it's more than 7 days
+				lastLine = read;
+				String[] parsedItems = lastLine.split("[\\t ]+");
+				totalDailyLearned += Integer.parseInt(parsedItems[5]);
+				totalDailyLearned += Integer.parseInt(parsedItems[12]);
+			    learnedItems = Integer.parseInt(parsedItems[5]) + Integer.parseInt(parsedItems[12]);
+				dayCount = Integer.parseInt(parsedItems[0].substring(0, parsedItems[0].indexOf("/", 0))); // Set the next day
+			    deckCount++;
+			}
+			
+		//logView.setText(lastLine + "\n");
+			
+		
+		//Sets the very first day
+		
+		/*for(int i=0; i<parsedItems.length; i++)
+			logView.append(parsedItems[i] + "\n");*/
+		
+		
+		//logView.append("\n" + day);
+			
+		
+		logView.setText("English-Chinese Learning Progress\n");
+		//logView.append(lastLine);
+		logView.append("\n+ You have completed: " + deckCount + " decks.\n");
+		logView.append("\n+ You have learned: " + learnedItems + " items.\n");
+		logView.append("\n+ An average of: " + String.format("%.2f", (double)totalDailyLearned/deckCount) + " items daily.\n");
+
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			logView.setText("No progress on English-Chinese decks.\n");
+>>>>>>> incoming.merge.branch
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
+<<<<<<< HEAD
 	}
 
 	private int getLearned(String line) {
@@ -82,6 +137,55 @@ public class LogActivity extends Activity {
 		return totalLearned;
 	}
 
+=======
+		logView.append("\n-----------------------------------------------------------\n\n");
+		
+		//
+		//CHINESE - ENGLISH SECTION, RESET ALL VALUE
+		//
+		
+		deckCount = 0;
+		learnedItems = 0;
+		totalDailyLearned = 0;
+		
+		logFileHandle = new File(MainActivity.filesDir, CEfileName);
+		try {
+			reader = new BufferedReader(new FileReader(logFileHandle));
+			String[] initialParse = reader.readLine().split("[\\t ]+");
+			deckCount++;
+			int firstDay = Integer.parseInt(initialParse[0].substring(0, initialParse[0].indexOf("/", 0)));
+			int dayCount = firstDay;
+			while((read = reader.readLine()) != null && dayCount < firstDay+7){ //Will stop if it's more than 7 days
+				lastLine = read;
+				String[] parsedItems = lastLine.split("[\\t ]+");
+				totalDailyLearned += Integer.parseInt(parsedItems[5]);
+				totalDailyLearned += Integer.parseInt(parsedItems[12]);
+				learnedItems = Integer.parseInt(parsedItems[5]) + Integer.parseInt(parsedItems[12]);
+				dayCount = Integer.parseInt(parsedItems[0].substring(0, parsedItems[0].indexOf("/", 0))); // Set the next day
+			    deckCount++;
+			}
+			
+		
+		logView.append("Chinese-English Learning Progress\n");
+		logView.append("\n+ You have completed: " + deckCount + " decks.\n");
+		logView.append("\n+ You have learned: " + learnedItems + " items.\n");
+		logView.append("\n+ An average of: " + String.format("%.2f", (double)totalDailyLearned/deckCount) + " items daily.\n");
+		
+		
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			logView.append("\nNo progress on Chinese-English decks.\n");
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	
+
+>>>>>>> incoming.merge.branch
 	/**
 	 * Set up the {@link android.app.ActionBar}, if the API is available.
 	 */

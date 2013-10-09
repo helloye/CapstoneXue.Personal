@@ -180,12 +180,20 @@ final public class SoundManager {
 
 	public void dispose( )
 	{
+<<<<<<< HEAD
 		if(instance != null){
+=======
+		if ( instance != null ) {
+>>>>>>> incoming.merge.branch
 		_soundPool.release();
 		_mediaPlayer.stop();
 		_mediaPlayer.release();
 		_mediaPlayer = null;
 		_soundPool = null;
+<<<<<<< HEAD
+=======
+		instance = null;
+>>>>>>> incoming.merge.branch
 		}
 		
 	}

@@ -45,7 +45,11 @@
         	android:defaultValue="true" />
         	
         </PreferenceCategory>
+<<<<<<< HEAD
         	
 
 
+=======
+        
+>>>>>>> incoming.merge.branch
 </PreferenceScreen>

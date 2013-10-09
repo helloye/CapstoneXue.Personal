@@ -9,6 +9,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URL;
 import java.net.URLConnection;
+<<<<<<< HEAD
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -16,6 +17,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+=======
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+>>>>>>> incoming.merge.branch
  
 import android.app.Activity;
 import android.content.Context;
@@ -52,8 +58,15 @@ public class UpdateHelper extends Activity {
     		lastUpdated = new Date( 1970, 1, 1 );
     	}
     	
+<<<<<<< HEAD
     	c.setTime( lastUpdated ); // Now use today date.
     	c.add(Calendar.DATE, 14); // Adding 2 weeks, 14 days
+=======
+    	Date oneMinAfter = lastUpdated;
+    	oneMinAfter.setMinutes( lastUpdated.getMinutes() + 1 );
+    	c.setTime( oneMinAfter ); 
+    	//c.add(Calendar.DATE, 14); // Adding 2 weeks, 14 days
+>>>>>>> incoming.merge.branch
     	Date dayCanUpdate = c.getTime();
     	
     	// Compare it to today, if the time is not greater than 2 weeks, don't update
