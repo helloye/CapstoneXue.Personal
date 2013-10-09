@@ -4,6 +4,7 @@
     <string name="app_name">Xue</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
+    <string name="menu_log">Learning Progress</string>
     <string name="title_activity_main">Study Tool</string>
     <string name="title_activity_preferences">Settings</string>
     <string name="ecButtonLabel">English - Chinese</string>

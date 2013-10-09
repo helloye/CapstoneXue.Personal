@@ -1,6 +1,7 @@
 package com.MeadowEast.xue;
 
 import java.io.IOException;
+import java.net.ConnectException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -8,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.ActionMode.Callback;
@@ -24,13 +26,14 @@ import android.view.ViewManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class LearnActivity extends BaseActivity implements OnGestureListener, Callback {
 	static final String TAG = "LearnActivity";
-	static final int DEFAULT_ECDECKSIZE = 5;
-	static final int DEFAULT_CEDECKSIZE = 5;
+	static final int DEFAULT_ECDECKSIZE = 20;
+	static final int DEFAULT_CEDECKSIZE = 20;
 
 	private int _nECDeckSize;
 	private int _nCEDeckSize;
@@ -40,10 +43,11 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 	int itemsShown;
 	TextView prompt, answer, other, status;
 	Button advance, okay;
-
+	Chronometer cMeter;
+	
 	private SoundManager _soundManager;
 	private GestureDetector gestureScanner;
-	private static final int SWIPE_MIN_DISTANCE = 120;
+	private static final int SWIPE_MIN_DISTANCE = 100;
 	private static final int SWIPE_THRESHOLD_VELOCITY = 150;
 	
     @Override
@@ -68,6 +72,7 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
         status  = (TextView) findViewById(R.id.statusTextView);
         other   = (TextView) findViewById(R.id.otherTextView);
         answer  = (TextView) findViewById(R.id.answerTextView);
+        cMeter = (Chronometer) findViewById(R.id.timer1);
         //advance  = (Button) findViewById(R.id.advanceButton);
         //okay     = (Button) findViewById(R.id.okayButton);
     	   
@@ -98,6 +103,25 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 		
     	clearContent();
     	doAdvance();
+
+    }
+    
+    //Chronometer start and stop below!!
+    
+    private long lastPaused=0;
+    
+    @Override
+    protected void onPause(){
+    	super.onPause();
+    	lastPaused=(SystemClock.elapsedRealtime() - cMeter.getBase());
+    	cMeter.stop();
+    }
+    
+    @Override
+	protected void onResume(){
+    	super.onResume();
+    	cMeter.setBase(SystemClock.elapsedRealtime() - lastPaused);
+    	cMeter.start();
     }
 
     @Override
@@ -367,6 +391,12 @@ public class LearnActivity extends BaseActivity implements OnGestureListener, Ca
 		// TODO Auto-generated method stub
 		
 		String selected;
+		Log.d(TAG, "Initializing Network Manager.");
+		NetworkManager networkManager = NetworkManager.getInstance();
+		if(!networkManager.isOnline(getApplicationContext())){
+			Toast.makeText(getApplicationContext(), "No network connection!!", Toast.LENGTH_LONG).show();
+			return false;
+		}
 		
 		if(MainActivity.mode.equals("ec")){
 			int start = other.getSelectionStart();

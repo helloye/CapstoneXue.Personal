@@ -20,6 +20,7 @@ import java.util.Map;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -39,7 +40,7 @@ import android.widget.Toast;
 
 public class MainActivity extends BaseActivity implements OnClickListener {
 
-	Button ecButton, ceButton, ecLogButton, ceLogButton, exitButton;
+	Button ecButton, ceButton, exitButton;
 	public static File filesDir;
 	public static String mode;
 	static final String TAG = "XUE MainActivity";
@@ -80,15 +81,14 @@ public class MainActivity extends BaseActivity implements OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);  
         
+	// Fill in the default preference from the preferences xml file
+	PreferenceManager.setDefaultValues( this, R.xml.preferences, false);
+
         ecButton   = (Button) findViewById(R.id.ecButton);
         ceButton   = (Button) findViewById(R.id.ceButton);
         exitButton = (Button) findViewById(R.id.exitButton);
-        ecLogButton = (Button) findViewById(R.id.ecLogButton);
-        ceLogButton = (Button) findViewById(R.id.ceLogButton);
     	ecButton.setOnClickListener(this);
     	ceButton.setOnClickListener(this);
-    	ecLogButton.setOnClickListener(this);
-    	ceLogButton.setOnClickListener(this);
     	exitButton.setOnClickListener(this);
     	
     	
@@ -133,7 +133,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
 		
     }
 
-	public void UpdateVocab() throws MalformedURLException, IOException {
+	private void UpdateVocab() throws MalformedURLException, IOException {
 		
 		// Helper fucntions to determine if an update is possible
 		_updateCards = new UpdateHelper();
@@ -142,8 +142,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
 		//this._btnUpdateVocab = (Button)this.findViewById( R.id.btnGetVocab );
 		  
 		// check every 2 weeks if the vocab file on the server is newer
-		//ANTHONY THIS IS CURRENTLY SET TO NOT UPDATE.
-		if (! !_updateCards.shouldUpdate( this.getApplicationContext(), filesDir.getPath() + gStrVocabFileName, _strVocabURL ) ) {
+		if ( !_updateCards.shouldUpdate( this.getApplicationContext(), filesDir.getPath() + gStrVocabFileName, _strVocabURL ) ) {
 			
 			// Ask the user if they want to update
 			new AlertDialog.Builder(this)
@@ -152,22 +151,22 @@ public class MainActivity extends BaseActivity implements OnClickListener {
             .setMessage(R.string.desireUpdate)
             .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
-                	fDesiresUpdate = true;    
+                	// The user clicked yes, so run the task for updating the cards
+                	Update();  
                 }
             })
             .setNegativeButton(R.string.no, null)
             .show();
-
-			// if they dont't want to update, escape
-			if ( !fDesiresUpdate )
-				return;
-			
-	        // They do!  Start the update.
-	        DownloadFileFromURL task = new DownloadFileFromURL( this );
-	        task.execute( _strVocabURL );
         }
-		
 	 }
+	
+	private void Update() {
+	
+        // They do!  Start the update.
+        DownloadFileFromURL task = new DownloadFileFromURL( this );
+        task.execute( _strVocabURL );
+	}
+
 	
     public void onClick( View view ) {
     	
@@ -183,16 +182,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
     		i = new Intent(this, LearnActivity.class);
     		startActivity(i);
 			break;
-    	case R.id.ecLogButton:
-    		mode = "ec";
-    		i = new Intent(this, LogActivity.class);
-    		startActivity(i);
-    		break;
-    	case R.id.ceLogButton:
-    		mode = "ce";
-    		i = new Intent(this, LogActivity.class);
-    		startActivity(i);
-    		break;
+    	
     	case R.id.exitButton:
     		finish();
 			break;
@@ -252,7 +242,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
                .setIcon(android.R.drawable.ic_dialog_alert)
                .setTitle( R.string.alert_tit )
                .setMessage( !sdcard_avail ? R.string.no_sdcard :  R.string.sdcard_read_only )
-               .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+               .setPositiveButton(R.string.okay, new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int which) {
                 	   MainActivity.this.finish(); 
                    }
@@ -265,6 +255,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
            return _bSDCardOkay;
     
    }
+
     /**
      * Showing Dialog
      * */
@@ -277,7 +268,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
             pDialog.setIndeterminate(false);
             //pDialog.setMax(100);
             pDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            pDialog.setCancelable(true);
+            //pDialog.setCancelable(true);
             pDialog.show();
             //ViewGroup.LayoutParams lay = new ViewGroup.LayoutParams(1, 0);
             //pDialog.addContentView( (Button)this.findViewById( R.id.btnCancelUpdate ), lay);
@@ -304,7 +295,26 @@ public class MainActivity extends BaseActivity implements OnClickListener {
 		@Override
         protected void onPreExecute() {
             super.onPreExecute();
-            pDialog.show();//showDialog( progress_bar_type );
+            
+    		// Check the internet connection
+    		if ( !_networkManager.isOnline( _context.getApplicationContext() ) ) {
+    			Toast toast = Toast.makeText( _context, "Update Error!", Toast.LENGTH_SHORT );
+        		toast.show();
+    			cancel( true );
+    			return;
+    		}
+            /*
+             pDialog = new ProgressDialog(this);
+             
+            pDialog.setMessage("Downloading cards...");
+            pDialog.setIndeterminate(false);
+            //pDialog.setMax(100);
+            pDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            //pDialog.setCancelable(true);
+            pDialog.show();
+            */
+            showDialog( progress_bar_type );
+            
         }
  
         public DownloadFileFromURL( Context context ) {
@@ -325,15 +335,11 @@ public class MainActivity extends BaseActivity implements OnClickListener {
 
         	// open the address
         	try {
-        		
-        		// Check the internet connection
-        		if ( !_networkManager.isOnline( _context.getApplicationContext() ) )
-        			throw new ConnectException( "Not connected to the internet." );
-        		
+        				
         		url = new URL( strURL[0] );
         		urlConnection = url.openConnection();
         		
-        		// this will be useful so that you can show a tipical 0-100% progress bar
+        		// this will be useful so that you can show a typical 0-100% progress bar
                 int lenghtOfFile = urlConnection.getContentLength();
 
                 // download the file
@@ -362,6 +368,9 @@ public class MainActivity extends BaseActivity implements OnClickListener {
                 input.close();
             } catch (Exception e) {
                 Log.e("Error: ", e.getMessage());
+                pDialog.dismiss();
+                Toast toast = Toast.makeText( _context, "Update Error!", Toast.LENGTH_SHORT );
+        		toast.show();
                 //finish();
             }
  
@@ -374,7 +383,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
         protected void onProgressUpdate(String... progress) {
             // setting progress percentage
             pDialog.setProgress(Integer.parseInt(progress[0]));
-       }
+        }
  
         /**
          * After completing background task
@@ -388,6 +397,7 @@ public class MainActivity extends BaseActivity implements OnClickListener {
         	File fileUpdated = new File( _strVocabDestPath );
         	try {
         		fileOld.renameTo( fileUpdated );
+        		_updateCards.writeLastUpdated();
         	}
         	catch( Exception ex ) {
         		Log.e( TAG, "Unable to save updated file." + _strVocabDestPath );
@@ -398,8 +408,8 @@ public class MainActivity extends BaseActivity implements OnClickListener {
 
         	}
             // dismiss the dialog after the file was downloaded
-        	pDialog.dismiss();
-            //dismissDialog( progress_bar_type );
+        	//pDialog.dismiss();
+            dismissDialog( progress_bar_type );
             // Displaying downloaded image into image view
             // Reading image path from sdcard
             //String imagePath = Environment.getExternalStorageDirectory().toString() + "/downloadedfile.jpg";

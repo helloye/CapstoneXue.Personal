@@ -30,4 +30,13 @@ public class Deck {
 	public void putFront(CardStatus cs){
 		cardStatusQueue.addFirst(cs);
 	}
+	
+	public CardStatus getLast(){
+		return cardStatusQueue.getLast();
+	}
+	
+	public void removeLast(CardStatus cs){
+	if(cardStatusQueue.getLast() == cs)
+		cardStatusQueue.remove(cardStatusQueue.indexOf(cs));
+	}
 }
